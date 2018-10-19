@@ -51,6 +51,7 @@ def check_accuracy(sess, correct_prediction_op, confusion_matrix_op, dataset_ini
     sess.run(dataset_init_op)
     num_correct, num_samples = 0, 0
     cfm_agg = np.zeros((num_classes, num_classes), dtype=np.int32)
+    
     while True:
         try:
             correct_pred, cfm = sess.run([correct_prediction_op, confusion_matrix_op])

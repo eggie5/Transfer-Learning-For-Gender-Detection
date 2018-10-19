@@ -22,10 +22,7 @@ parser.add_argument('--prefix', default="landmark_aligned_face.")
 parser.add_argument('--model_path', default='./VGG_FACE.npy', type=str)
 parser.add_argument('--batch_size', default=32, type=int)
 parser.add_argument('--num_workers', default=4, type=int)
-parser.add_argument('--num_epochs1', default=10, type=int)
-parser.add_argument('--num_epochs2', default=10, type=int)
-parser.add_argument('--learning_rate1', default=1e-3, type=float)
-parser.add_argument('--learning_rate2', default=1e-5, type=float)
+parser.add_argument('--num_epochs', default=10, type=int)
 
 
 
@@ -42,7 +39,7 @@ def main(args):
     train_dataset = tf.data.Dataset.from_tensor_slices((train_filenames, train_labels))
     train_dataset = train_dataset.map(vgg_preprocessing._parse_function, num_parallel_calls=args.num_workers)
     train_dataset = train_dataset.map(vgg_preprocessing.training_preprocess, num_parallel_calls=args.num_workers)
-    train_dataset = train_dataset.shuffle(buffer_size=10000)  # don't forget to shuffle
+    train_dataset = train_dataset.shuffle(buffer_size=5000)  # don't forget to shuffle
     batched_train_dataset = train_dataset.batch(args.batch_size)
 
     # Validation dataset
@@ -86,8 +83,8 @@ def main(args):
         # Check initial accuracy
         #train_acc, train_cnf_matrix = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, train_init_op)
         val_acc, cm = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, val_init_op)
-        #print('Train accuracy: %f' % train_acc)
-        print('Val accuracy: %f\n' % val_acc)
+        #print('\nTrain accuracy: %f' % train_acc)
+        print('\nVal accuracy: %f\n' % val_acc)
     
         CLASS_NAMES=["M", "F", "?"]
     
@@ -97,7 +94,7 @@ def main(args):
             plt.show()
         else:
             cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            print(val_cnf_matrix)
+            print(cm)
 
     with tf.Session() as sess:
 
@@ -112,8 +109,8 @@ def main(args):
         print("initial eval (random init)...")
         epoch_eval(sess)
 
-        for epoch in range(args.num_epochs1):
-            print('Starting epoch %d / %d' % (epoch + 1, args.num_epochs1))
+        for epoch in range(args.num_epochs):
+            print('\nStarting epoch %d / %d' % (epoch + 1, args.num_epochs))
             sess.run(train_init_op)
     
             epoch_losses=[]
@@ -139,4 +136,4 @@ def main(args):
 if __name__ == '__main__':
     args = parser.parse_args()
     main(args)
-    # python train.py --model_path=./VGG_FACE.npy --train_path=../data/fold_0_data.txt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/
+    # python train.py --model_path=./VGG_FACE.npy --train_path=../data/fold_0_data.txt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/ --batch_size=64

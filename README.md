@@ -16,14 +16,44 @@ Readme file briefly listing the steps taken and the steps to run your code (trai
 Combine all the files into a tar bundle and submit the tar file to dropbox by going to the link -
 https://www.dropbox.com/request/itRKx41NA9eMQo6B340K
 
-
 User: adiencedb
 Password: adience
 
+# Usage
 
-```
+Files:
+
+* train.py - Training CLI
+* eval.py - Eval CLI 
+* metrics.py - Eval routines
+* model.py - Tensorflow Arch
+* data.py - Code for data pipline
+* VGG_FACE.npy - Caffe Face weights
+* /data/aligned/ - Directory of gender dataset
+* /ckpts/ - weights of Gender model (my model) that I pre-trained (TF checkpoint format)
+
+
+
+Here are some python dependencies which can be installed with:
+
+
+```bash
 pip install -r requirements.txt
 ```
+
+I have included my pre-trained Gender model which can be evaluated using the eval CLI:
+
+```shell
+python eval.py --model_path=./ckpts/model.ckpt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/
+```
+
+Or you can train (fine-tune) the model from scratch (make sure `base_path` is pointing to the dataset:
+
+```shell
+python train.py --model_path=./VGG_FACE.npy --train_path=../data/fold_0_data.txt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/ --batch_size=64
+```
+
+
 
 # Report
 
@@ -152,6 +182,8 @@ We can look at standard multi-class evaluation techniques like top-k accuracy. H
 ![FaceNet](https://eggie5_production.s3.amazonaws.com/static/213853.png)
 
 For example, on the 5th epoch, you can see the overall accuracy was 84% but is that good or not? We can see that 90% of the time we can correctly classify a Male and that 85% of the time we can correctly classify a Female. However, 16% of the time we confuse a Female as a Male, but not as frequently the other way around which I think is intuitive b/c men have long hair much more frequently than women having short. Maybe your business objective is dependent on not minimizing Female confusion. 
+
+
 
 ## References
 
