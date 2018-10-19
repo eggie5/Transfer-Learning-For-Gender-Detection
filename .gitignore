@@ -1,3 +1,4 @@
+*.pdf
 .DS_Store
 *.pyc
 vgg_face_caffe
