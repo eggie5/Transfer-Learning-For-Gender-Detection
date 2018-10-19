@@ -1,0 +1,8 @@
+.DS_Store
+*.pyc
+vgg_face_caffe
+caffe-tensorflow
+venv
+data
+__pycache__
+
