@@ -24,12 +24,14 @@ parser.add_argument('--num_workers', default=4, type=int)
 
 def main(args):
     val_filenames, val_labels = data.list_images(args.val_path, args.base_path, args.prefix)
+    data_len=len(val_filenames)
 
     # Validation dataset
     val_dataset = tf.data.Dataset.from_tensor_slices((val_filenames, val_labels))
     val_dataset = val_dataset.map(vgg_preprocessing._parse_function, num_parallel_calls=args.num_workers)
     val_dataset = val_dataset.map(vgg_preprocessing.val_preprocess, num_parallel_calls=args.num_workers)
     batched_val_dataset = val_dataset.batch(args.batch_size)
+    batched_val_dataset = batched_val_dataset.prefetch(2)
 
     iterator = tf.data.Iterator.from_structure(batched_val_dataset.output_types,
                                                        batched_val_dataset.output_shapes)
@@ -51,7 +53,8 @@ def main(args):
     
     
     def epoch_eval(sess, matrix_plot=False):
-        val_acc, cm = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, val_init_op)
+        steps = (data_len//args.batch_size)+1
+        val_acc, cm = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, val_init_op, total=steps)
         print('Val accuracy: %f\n' % val_acc)
     
         CLASS_NAMES=["M", "F", "?"]
@@ -69,7 +72,7 @@ def main(args):
         #restore model
         print("restoring weights...")
         saver.restore(sess, args.model_path)
-        print("...complete")
+        print("...complete\n")
         
         epoch_eval(sess, matrix_plot=False)
         
@@ -79,3 +82,4 @@ if __name__ == '__main__':
     main(args)
     
     #python eval.py --model_path=./ckpts/model.ckpt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/
+    #python eval.py --model_path=../transferlearning/caffe-tensorflow/ckpts/model.ckpt --val_path=../transferlearning/data/fold_1_data.txt --base_path=../transferlearning/data/aligned/

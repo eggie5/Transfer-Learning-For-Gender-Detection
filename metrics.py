@@ -4,6 +4,7 @@ mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 import itertools
 import tensorflow as tf
+from tqdm import tqdm
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
@@ -42,7 +43,7 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
     
     
-def check_accuracy(sess, correct_prediction_op, confusion_matrix_op, dataset_init_op):
+def check_accuracy(sess, correct_prediction_op, confusion_matrix_op, dataset_init_op, total=None):
     """
     Check the accuracy of the model on either train or val (depending on dataset_init_op).
     """
@@ -52,6 +53,7 @@ def check_accuracy(sess, correct_prediction_op, confusion_matrix_op, dataset_ini
     num_correct, num_samples = 0, 0
     cfm_agg = np.zeros((num_classes, num_classes), dtype=np.int32)
     
+    pbar = tqdm(total = total)
     while True:
         try:
             correct_pred, cfm = sess.run([correct_prediction_op, confusion_matrix_op])
@@ -59,11 +61,15 @@ def check_accuracy(sess, correct_prediction_op, confusion_matrix_op, dataset_ini
             num_samples += correct_pred.shape[0]
             
             cfm_agg +=cfm
+
+            pbar.update(1)
+            pbar.set_description("mean ACC: %f" % (float(num_correct) / num_samples))
             
             
         except tf.errors.OutOfRangeError:
             break
 
+    pbar.close()
     # Return the fraction of datapoints that were correctly classified
     acc = float(num_correct) / num_samples
     

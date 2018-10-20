@@ -34,19 +34,22 @@ def main(args):
 
     train_filenames, train_labels = data.list_images(args.train_path, args.base_path, args.prefix)
     val_filenames, val_labels = data.list_images(args.val_path, args.base_path, args.prefix)
-
+    data_len=len(val_filenames)
+    
     # Training dataset
     train_dataset = tf.data.Dataset.from_tensor_slices((train_filenames, train_labels))
+    train_dataset = train_dataset.shuffle(buffer_size=512) 
     train_dataset = train_dataset.map(vgg_preprocessing._parse_function, num_parallel_calls=args.num_workers)
     train_dataset = train_dataset.map(vgg_preprocessing.training_preprocess, num_parallel_calls=args.num_workers)
-    train_dataset = train_dataset.shuffle(buffer_size=5000)  # don't forget to shuffle
     batched_train_dataset = train_dataset.batch(args.batch_size)
+    batched_train_dataset = batched_train_dataset.prefetch(2)
 
     # Validation dataset
     val_dataset = tf.data.Dataset.from_tensor_slices((val_filenames, val_labels))
     val_dataset = val_dataset.map(vgg_preprocessing._parse_function, num_parallel_calls=args.num_workers)
     val_dataset = val_dataset.map(vgg_preprocessing.val_preprocess, num_parallel_calls=args.num_workers)
     batched_val_dataset = val_dataset.batch(args.batch_size)
+    batched_val_dataset = batched_val_dataset.prefetch(2)
 
     iterator = tf.data.Iterator.from_structure(batched_train_dataset.output_types,
                                                        batched_train_dataset.output_shapes)
@@ -80,10 +83,11 @@ def main(args):
     
     
     def epoch_eval(sess, matrix_plot=False):
+        steps = (data_len//args.batch_size)+1
         # Check initial accuracy
-        #train_acc, train_cnf_matrix = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, train_init_op)
-        val_acc, cm = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, val_init_op)
-        #print('\nTrain accuracy: %f' % train_acc)
+        train_acc, train_cnf_matrix = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, train_init_op, total=steps)
+        val_acc, cm = metrics.check_accuracy(sess, correct_prediction, confusion_matrix, val_init_op, total=steps)
+        print('\nTrain accuracy: %f' % train_acc)
         print('\nVal accuracy: %f\n' % val_acc)
     
         CLASS_NAMES=["M", "F", "?"]
@@ -115,7 +119,7 @@ def main(args):
     
             epoch_losses=[]
     
-            pbar = tqdm(total = len(train_filenames)//args.batch_size)
+            pbar = tqdm(total = (data_len//args.batch_size)+1)
             while True:
                 try:
                     _, xent = sess.run([fc8_train_op, loss])
@@ -125,10 +129,12 @@ def main(args):
                 except tf.errors.OutOfRangeError:
                     break
             
+            pbar.close()
             #batch eval
             epoch_eval(sess)
 
         #save model
+        print("Saved model to ckpts dir")
         save_path = saver.save(sess, "./ckpts/model.ckpt")
     
     
@@ -137,3 +143,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     main(args)
     # python train.py --model_path=./VGG_FACE.npy --train_path=../data/fold_0_data.txt --val_path=../data/fold_1_data.txt --base_path=../data/aligned/ --batch_size=64
+    
+    # python train.py --model_path=../transferlearning/caffe-tensorflow/VGG_FACE.npy --train_path=../transferlearning/data/fold_0_data.txt --val_path=../transferlearning/data/fold_1_data.txt --base_path=../transferlearning/data/aligned/ --batch_size=128 --num_epochs=5
