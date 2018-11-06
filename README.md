@@ -1,6 +1,6 @@
 # Fine-tune Face VGG for Gender Task
 
-There is an extensive writeup of this project at: eggie5.com/....
+There is an extensive writeup of this project at: http://www.eggie5.com/141-Case-Study-Transfer-Learning-for-Gender-Detection
 
 # Usage
 
