@@ -1,4 +1,8 @@
 *.pdf
+*.tar
+/eggnet
+*.npy
+/ckpts
 data/aligned/
 .venv
 .DS_Store
