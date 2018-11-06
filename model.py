@@ -22,6 +22,6 @@ class VGG_FACE_16_layers(Network):
              .max_pool(2, 2, 2, 2, name='pool5')
              .fc(4096, name='fc6')
              .fc(4096, name='fc7')
-             .fc(3, relu=False, name='fc8')
+             .fc(3, relu=False, name='fc8') #changed to 3 for our novel Gender task!!!
              .softmax(name='prob'))
              

@@ -22,6 +22,9 @@ parser.add_argument('--model_path', default='./ckpts/model.ckpt', type=str)
 parser.add_argument('--batch_size', default=32, type=int)
 parser.add_argument('--num_workers', default=4, type=int)
 
+def export(session, export_dir, x, y):
+    tf.saved_model.simple_save(session,export_dir, inputs={"x": x}, outputs={"y": y})
+
 def main(args):
     val_filenames, val_labels = data.list_images(args.val_path, args.base_path, args.prefix)
     data_len=len(val_filenames)
@@ -74,7 +77,9 @@ def main(args):
         saver.restore(sess, args.model_path)
         print("...complete\n")
         
-        epoch_eval(sess, matrix_plot=False)
+        #epoch_eval(sess, matrix_plot=False)
+        
+        export(sess, "eggnet", images, logits)
         
 
 if __name__ == '__main__':
