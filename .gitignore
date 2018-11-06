@@ -1,5 +1,4 @@
 *.pdf
-data/fold_1_data.txt
 *.tar
 /eggnet
 *.npy
